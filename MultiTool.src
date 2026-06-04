@@ -1,0 +1,326 @@
+///////////////////////LIBRARY///////////////////////////
+metax = include_lib("/lib/metaxploit.so")
+if not metax then
+	exit("Metaxploit library not found. Please ensure it is installed.")
+end if
+
+cryptx = include_lib("/lib/crypto.so")
+if not cryptx then
+	print("Crypto library not found. Password decryption will be unavailable.")
+end if
+///////////////////////////////////////////////////////////
+
+
+////////////////////// /GLOBAL//////////////////////////
+g = get_custom_object
+g.obj = null
+ip = null
+port = null
+bip = null
+shells = []
+actshell = null
+menu = true
+///////////////////////////////////////////////////////
+
+
+/////////////////////// COLOR /////////////////////////
+red = "<color=#FF0000>"
+yellow = "<color=#FFFF00>"
+green = "<color=#00FF00>"
+teal = "<color=#2DDDE3>"
+orange = "<color=#FC6F00>"
+slate = "<color=#E0E0E0>"
+pink = "<color=#FF1BFF>"
+purple = "<color=#8B178B>"
+cap = "</color>"	
+
+/////////////////////// BANNER ////////////////////////
+//////////////////////////////////////////////////////
+show_banner = function
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
+	print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
+	print("@@@#             #@@@@@@@@@@@@*             #@@@")
+	print("@@@@@#         #@@@@@@@@@@@@@@@#          #@@@@@")
+	print("@@@@@#    HH   #@@@@@@@@@@@@@@@#    CC   #@@@@@@")
+	print("@@@#             #@@@@@@@@@@@@*             #@@@")
+	print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
+	print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@ #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@")
+	print("@#  #@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@#  @@")
+	print("@@# ##  *@@#@@@@@@@@@@@@@@@@@@@@@@###@#   ## @@@")
+	print("@@@@@#  *#*  #@  @@@@@@@@@@@@@# ## E ##   #@@@@@")
+	print("@@@@@#  *#*  ##   ##   ##   #*  ##   ## D @@@@@@")
+	print("@@@@@@@#*#*C##    ## A ##   #* K##   ## #@@@@@@@")
+	print("@@@@@@@@@@*  ##   ##   ##   #*  ##   #@@@@@@@@@@")
+	print("@@@@@@@@@@@##@# R ##   ## C #*  #@##@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@   @@  #@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+    print("")
+	print(slate + "Commands")
+	print(purple +"Byakugan")
+	print(teal + "Curse")
+	print (green+ "Connect")
+	print (orange+ "Krak")
+	print(slate + "Help") 
+end function
+///////////////////////////////////////////////////////////
+
+
+
+////////////////////////BYYAKUGAN/////////////////////////////
+//////////////////////////////////////////////////////////////
+byakugan = function(params)
+	if params.len < 0 then
+	print(red + "Invalid IP")
+	return
+	end if
+
+	target = params[0]
+	router = get_router(target)
+	devices = router.devices_lan_ip
+	if target then
+	print (whois(target)+char(10))
+	
+	print(green + "Captured Lan IPs")
+	for lan in devices
+		print(teal + lan)
+	end for
+	end if
+	print(teal + "Probing network...")
+
+	for ip in devices
+	print(char(10) + yellow + ip)
+	ports = device_ports(router,ip)
+	openports = []
+	for port in ports
+		state = green
+		if port.is_closed then state = red
+		push(openports, port)
+		info = port_info(router, port)
+		if port != null then 
+		print(char(9) + "}> " + state + port.port_number + cap + " | " + orange + info)
+	end if
+	end for
+end for
+end function
+///////////////////////////////////////////////////
+
+
+
+////////////////////////// CURSE //////////////////
+///////////////////////////////////////////////////
+curse = function(params)
+    if params.len < 2 then
+    print(red + "Curse [ip] [port]")
+    return
+    end if
+    ip = params[0]
+    port = params[1]
+	ip = ip.trim()
+	port = port.trim()
+	port_num = port.to_int
+	if port_num == 0 then
+		print(red + "Invalid port: " + port)
+		return
+	end if
+
+	bip = user_input("Bounce IP/PW change?")
+
+	print(green +  "Connecting to " + ip + ":" + port_num)
+	net = metax.net_use(ip, port_num)
+if not net then
+    print(red + "Connection to Net Session Failed")
+    return
+end if
+
+libdump = net.dump_lib()
+if not libdump then
+    print(red + "Failed to dump library")
+    return
+end if
+
+memlist = metax.scan(libdump)
+
+s = 0; c = 0; f = 0;
+
+for mem in memlist
+    raw = metax.scan_address(libdump, mem)
+    scanresults = raw.split("Unsafe check: ")
+    for result in scanresults
+        if result == scanresults[0] then continue
+        start = result.indexOf("<b>") + 3
+        ending = result.indexOf("</b>")
+        if start < 3 or ending < 0 then continue
+        value = result[start:ending]
+        print(char(10) * 3 + teal + mem + " " + value)
+        obj = libdump.overflow(mem,value,bip)
+        t = typeof(obj)
+        if t == "shell" then 
+            print(green + "OBJ OBTAINED: " + obj)
+            s = s + 1
+        end if
+        if t == "computer" then 
+            print(yellow + "OBJ OBTAINED: " + obj)
+            c = c + 1
+        end if
+        if t == "file" then 
+            print(orange + "OBJ OBTAINED: " + obj)
+            f = f + 1
+        end if
+        if obj then
+            shells.push([mem, value, obj])
+        end if
+    end for
+end for
+
+print(green + "Shells }> " + s)
+print(yellow + "Computers }> " + c)
+print(orange + "Files }> " + f)
+end function
+///////////////////////////////////////////////////
+
+
+
+///////////////////////FOCUS////////////////////////
+focus = function
+ if shells == null or shells.len == 0 then
+	print(red + "No targets found. Please run curse first.")
+	return
+end if
+
+print(green + "Available Targets: ")
+
+idx = 0;
+
+for entry in shells
+	mem = entry[0]
+	val = entry[1]
+	obj = entry[2]
+	print(slate + " | " + idx + " | " + pink + mem + " | " + teal + val + " | " + yellow + typeof(obj))
+	idx = idx + 1
+end for
+
+sel = user_input(slate + "Select Target }>  ")
+si = sel.to_int
+if si < 0 or si >= shells.len then
+	print(red + "Invalid selection")
+	return
+end if
+actidx = si
+actmem = shells[si][0]
+actval = shells[si][1]
+actshell = shells[si][2]
+g.obj = actshell
+print(teal + "Remote " + typeof(g.obj) + " selected")
+
+end function
+///////////////////////////////////////////////////
+
+
+
+///////////////////////KRAK////////////////////////
+krak = function()
+if g.obj == null then
+	print(red + "No OBJ selected.")
+	return
+end if
+
+t = typeof(g.obj)
+content = null
+
+if t == "file" then
+	content = g.obj.get_content
+else if t == "computer" then
+	host = g.obj
+	pfile = File(host, "/etc/passwd")
+	content = pfile.get_content
+else if t == "shell" then
+	host = g.obj.host_computer
+	if host == null then
+		print(red + "Unable to resolve host from shell object.")
+		return
+	end if
+	pfile = File(host, "/etc/passwd")
+	content = pfile.get_content
+else
+	print(red + "Unsupported object type: " + t)
+	return
+end if
+
+if content == null then
+	print(red + "Root Access Required/ No file found.")
+	return
+end if
+
+print(green + content)
+
+answer = user_input(teal + "Start Decode Process? (y/n): ")
+if answer != "y" and answer != "yes" then
+	print(orange + "Decode Aborted.")
+	return
+end if
+print (green + "Decoding Now...")	
+for con in content.split(char(10))
+	parts = con.split(":")
+	if parts.len < 2 then continue
+	user = parts[0].trim()
+	hash = parts[1].trim()
+	pw = cryptx.decipher(hash)
+	if user == "root" then
+		col = red
+	else
+		col = green
+	end if
+	print(col + ">} " + user + " | " + pw + cap)
+end for
+end function
+///////////////////////////////////////////////////
+
+
+/////////////////////////TERMINAL//////////////////
+terminal = function()
+if g.obj == null then
+	print(red + "No target selected.")
+	return
+end if
+
+if g.obj != null then
+	g.obj.start_terminal
+end if
+end function
+///////////////////////////////////////////////////
+
+
+//////////////////////////MAIN LOOP(menu)//////////
+show_banner()
+while menu
+
+
+	input = user_input("X.O.F }> ")
+	if input.len == 0 then continue
+
+	parts = input.trim().split(" ")
+	cmd = parts[0].lower
+	params = parts[1:]
+
+	if cmd == "curse" then
+		curse(params)
+	else if cmd == "byakugan" then
+		byakugan(params)
+	else if cmd == "focus" then
+		focus()
+	else if cmd == "connect" then
+		terminal()
+	else if cmd == "krak" then
+		krak()
+	else if cmd == "help" then
+		show_banner()
+	else if cmd == "exit" or cmd == "quit" or cmd == "close" then
+		menu = false
+	end if
+
+end while
