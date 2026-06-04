@@ -1,0 +1,185 @@
+////////Libs////////////
+cryptx = include_lib("/lib/crypto.so")
+if not cryptx then
+return("Error: Missing crypto library")
+end if
+
+metax = include_lib("/lib/metaxploit.so")
+if not metax then
+return("Error: Missing Xploits lib")
+end if
+
+////////Globals/////////
+menu = true
+iface = "wlan0"
+computer = get_shell.host_computer
+
+////////Colors//////////
+gold = "<color=#E09F33FF>"
+green = "<color=#005707FF>"
+blue = "<color=#0012A6FF>"
+maincol = "<color=#5E079CFF>"
+red = "<color=#FF0000FF>"
+////////Banner//////////
+show_banner = function
+print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
+print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
+print("@@@#             #@@@@@@@@@@@@*             #@@@")
+print("@@@@@#         #@@@@@@@@@@@@@@@#          #@@@@@")
+print("@@@@@#    HH   #@@@@@@@@@@@@@@@#    CC   #@@@@@@")
+print("@@@#             #@@@@@@@@@@@@*             #@@@")
+print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
+print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
+print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+print("@ #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@")
+print("@#  #@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@#  @@")
+print("@@# ##  *@@#@@@@@@@@@@@@@@@@@@@@@@###@#   ## @@@")
+print("@@@@@#  *#*  #@  @@@@@@@@@@@@@# ## E ##   #@@@@@")
+print("@@@@@#  *#*  ##   ##   ##   #*  ##   ## D @@@@@@")
+print("@@@@@@@#*#*C##    ## A ##   #* K##   ## #@@@@@@@")
+print("@@@@@@@@@@*  ##   ##   ##   #*  ##   #@@@@@@@@@@")
+print("@@@@@@@@@@@##@# R ##   ## C #*  #@##@@@@@@@@@@@@")
+print("@@@@@@@@@@@@@@@@@@@@   @@  #@@@@@@@@@@@@@@@@@@@@")
+print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+print("")
+print(maincol + "Commands:")
+print(gold + "start")
+end function
+
+////////Monitor Mode////////
+monitor_mode = function
+
+for device in computer.network_devices
+	if device == iface then
+		return device.monitor_mode
+	end if
+end for
+return false
+
+end function
+
+ensure_monitor_mode = function
+
+
+if not monitor_mode() then
+	print("Starting monitor mode on " + iface)
+	cryptx.airmon("start", iface)
+end if
+
+
+end function
+
+disable_monitor_mode = function
+
+cryptx.airmon("stop", iface)
+print("Monitor mode disabled")
+
+end function
+
+////////Main Attack Routine////////
+start = function
+
+ensure_monitor_mode()
+
+networks = computer.wifi_networks(iface)
+
+if networks.len == 0 then
+	print("No WiFi networks found.")
+	return
+end if
+
+print("")
+print("Available Networks:")
+print("")
+print( "ID " + blue + "BSSID" + " " + gold + "PWR" + "   " + green + "ESSID")
+
+for index in range(0, networks.len - 1)
+	parts = networks[index].split(" ")
+	if parts.len >= 3 then
+		print(maincol + index + ".) " + blue + parts[0] + "  " + gold + parts[1] + "  " + green + parts[2])
+	else
+		print(maincol + index + ".) " + networks[index])
+	end if
+end for
+
+print("")
+
+selectedIndex = user_input("Select Wifi: ").to_int()
+
+if typeof(selectedIndex) == "string" then
+	print("Invalid input.")
+	return
+end if
+
+if selectedIndex < 0 or selectedIndex > networks.len - 1 then
+	print("Wrong index!")
+	return
+end if
+
+parsed = networks[selectedIndex].split(" ")
+
+bssid = parsed[0]
+pwr = parsed[1][:-1].to_int()
+essid = parsed[2]
+
+if pwr <= -15 then
+	pwr = -14
+end if
+
+potentialAcks = 300000 / (pwr + 15)
+
+print("")
+print("Launching aireplay...")
+cryptx.aireplay(bssid, essid, potentialAcks)
+
+print("Cracking password...")
+wifiPassword = cryptx.aircrack("/home/" + active_user + "/file.cap")
+
+if not wifiPassword then
+	print(red +"Failed to crack password.")
+	return
+end if
+
+print(green + "Password Found: " + wifiPassword)
+
+computer.connect_wifi(iface, bssid, essid, wifiPassword)
+
+print(green + "Connected to " + essid)
+
+end function
+
+////////Program Start////////
+show_banner()
+while menu
+print("")
+
+input = user_input(green + "Get connected! }> ")
+
+if input.len == 0 or input.trim == "" then
+	continue
+end if
+
+parts = input.trim().split(" ")
+cmd = parts[0].lower()
+
+if cmd == "start" then
+	start()
+end if
+
+if cmd == "help" then
+	show_banner()
+end if
+
+if cmd == "clear" then
+	clear_screen
+end if
+
+if cmd == "exit" or cmd == "quit" then
+	print("Exiting...")
+	exit
+	end if
+end while
+
