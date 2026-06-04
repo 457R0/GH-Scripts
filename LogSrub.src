@@ -1,0 +1,21 @@
+computer = get_shell.host_computer
+computer.create_folder("/", "h4x")
+old_log = computer.File("/var/system.log")
+user = active_user
+owner = user
+if owner != "root" then
+exit("root required for this")
+end if
+old_log.delete
+
+computer.touch("/h4x", "system.log")
+new_log = computer.File("/h4x/system.log")
+
+new_log.set_content("Sorry Choom")
+new_log.set_owner("root")
+new_log.set_group("root")
+new_log.chmod("u-rwx")
+new_log.chmod("g-rwx")
+new_log.chmod("o-rwx")
+new_log.move("/var", "system.log")
+print("10-4 We're Clear Here.")
