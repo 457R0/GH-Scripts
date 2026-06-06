@@ -149,8 +149,10 @@ computer.connect_wifi(iface, bssid, essid, wifiPassword)
 
 print(green + "Connected to " + essid)
 
-end function
+f = home_dir+ "/file.cap"
+get_shell.host_computer.File(get_abs_path(f)).delete
 
+end function
 ////////Program Start////////
 show_banner()
 while menu
@@ -182,4 +184,3 @@ if cmd == "exit" or cmd == "quit" then
 	exit
 	end if
 end while
-
