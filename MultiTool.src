@@ -289,7 +289,7 @@ if g.obj == null then
 end if
 
 if g.obj != null then
-	g.obj.start_terminal
+	g.obj.launch("bin/bash", "")
 end if
 end function
 ///////////////////////////////////////////////////
