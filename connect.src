@@ -12,7 +12,6 @@ end if
 ////////Globals/////////
 menu = true
 iface = "wlan0"
-computer = get_shell.host_computer
 
 ////////Colors//////////
 gold = "<color=#E09F33FF>"
@@ -22,138 +21,452 @@ maincol = "<color=#5E079CFF>"
 red = "<color=#FF0000FF>"
 ////////Banner//////////
 show_banner = function
-print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
-print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
-print("@@@#             #@@@@@@@@@@@@*             #@@@")
-print("@@@@@#         #@@@@@@@@@@@@@@@#          #@@@@@")
-print("@@@@@#    HH   #@@@@@@@@@@@@@@@#    CC   #@@@@@@")
-print("@@@#             #@@@@@@@@@@@@*             #@@@")
-print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
-print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
-print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-print("@ #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@")
-print("@#  #@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@#  @@")
-print("@@# ##  *@@#@@@@@@@@@@@@@@@@@@@@@@###@#   ## @@@")
-print("@@@@@#  *#*  #@  @@@@@@@@@@@@@# ## E ##   #@@@@@")
-print("@@@@@#  *#*  ##   ##   ##   #*  ##   ## D @@@@@@")
-print("@@@@@@@#*#*C##    ## A ##   #* K##   ## #@@@@@@@")
-print("@@@@@@@@@@*  ##   ##   ##   #*  ##   #@@@@@@@@@@")
-print("@@@@@@@@@@@##@# R ##   ## C #*  #@##@@@@@@@@@@@@")
-print("@@@@@@@@@@@@@@@@@@@@   @@  #@@@@@@@@@@@@@@@@@@@@")
-print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
+	print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
+	print("@@@#             #@@@@@@@@@@@@*             #@@@")
+	print("@@@@@#         #@@@@@@@@@@@@@@@#          #@@@@@")
+	print("@@@@@#    HH   #@@@@@@@@@@@@@@@#    CC   #@@@@@@")
+	print("@@@#             #@@@@@@@@@@@@*             #@@@")
+	print("@@@@#           #@@@@@@@@@@@@@@            #@@@@")
+	print("@@@@@@#  #@#  #@@@@@@@@@@@@@@@@@#  #@@#  #@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+	print("@ #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@")
+	print("@#  #@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##@#  @@")
+	print("@@# ##  *@@#@@@@@@@@@@@@@@@@@@@@@@###@#   ## @@@")
+	print("@@@@@#  *#*  #@  @@@@@@@@@@@@@# ## E ##   #@@@@@")
+	print("@@@@@#  *#*  ##   ##   ##   #*  ##   ## D @@@@@@")
+	print("@@@@@@@#*#*C##    ## A ##   #* K##   ## #@@@@@@@")
+	print("@@@@@@@@@@*  ##   ##   ##   #*  ##   #@@@@@@@@@@")
+	print("@@@@@@@@@@@##@# R ##   ## C #*  #@##@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@   @@  #@@@@@@@@@@@@@@@@@@@@")
+	print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
-print("")
-print(maincol + "Commands:")
-print(gold + "start")
+	print("")
+	print(maincol + "Commands:")
+	print(gold + "xwefe")
+	print(gold + "roamer")
 end function
 
-////////Monitor Mode////////
-monitor_mode = function
+/////xwefe//////
+xwefe = function
+	// **Find:**
+	// Finds files (and folders) matching a pattern with optional flags.  Use * as a wildcard character.
+	// @description **Flags:**
+	// @description  b - Binary Files (excluding folders)
+	// @description  f - Folders Only
+	// @description  t - Text Files
+	// @description  r - Can Read
+	// @description  w - Can Write
+	// @description  x - Can Execute
+	// @example g.func.find(file, "*.so", "br") // Finds all readable libraries (binary files ending in ".so" with the permission "r")
+	// @example g.func.find(file, "passwd", "t") // Finds all text files named "passwd"
+	// @example g.func.find(file, "guest", "f") // Finds all folders named "guest"
+	// @param {file} file - The starting file or folder.
+	// @param {string} name - The pattern to match file names against.
+	// @param {string|null} flags - Optional flags to filter results.
+	// @return {list<file>} - The list of matching files.
+	find = function(file, name, flags = null)
+    pattern = name.replace("\.", "\.").replace("\*", ".*")
+    b = flags != null and flags.indexOf("b") != null // Binary Files
+    f = flags != null and flags.indexOf("f") != null // Folders
+    t = flags != null and flags.indexOf("t") != null // Text Files
+    r = flags != null and flags.indexOf("r") != null // Can Read
+    w = flags != null and flags.indexOf("w") != null // Can Write
+    x = flags != null and flags.indexOf("x") != null // Can Execute
 
-for device in computer.network_devices
-	if device == iface then
-		return device.monitor_mode
-	end if
-end for
-return false
+    results = []
 
-end function
+    if file.name.is_match(pattern) then
+        isMatch = 1
 
-ensure_monitor_mode = function
+        if b and (not file.is_binary or file.is_folder) then isMatch = 0
+        if f and not file.is_folder then isMatch = 0
+        if t and file.is_binary then isMatch = 0
+        if r and not file.has_permission("r") then isMatch = 0
+        if w and not file.has_permission("w") then isMatch = 0
+        if x and not file.has_permission("x") then isMatch = 0
 
+        if isMatch then results.push(file)
+    end if
+    
+    if file.is_folder then
+        files = file.get_files + file.get_folders
 
-if not monitor_mode() then
-	print("Starting monitor mode on " + iface)
-	cryptx.airmon("start", iface)
-end if
+        for temp in files
+            results = results + find(temp, name, flags)
+        end for
+    end if
 
+    return results
+	end function
 
-end function
+	vars = {}
 
-disable_monitor_mode = function
+	vars.green = "<color=#81eb00><b>"
+	vars.darkgreen = "<color=#007700><b>"
+	vars.cyan = "<color=#0cddf2><b>"
+	vars.blue = "<color=#3366ff><b>"
+	vars.yellow = "<color=#dbd700><b>"
+	vars.orange = "<color=#ffa500><b>"
+	vars.magenta = "<color=#b0509e><b>"
+	vars.red = "<color=#c30000><b>"
+	vars.white = "<color=#eeeeee><b>"
+	vars.lightgray = "<color=#b3b3b3><b>"
+	vars.endcolor = "</b></color>"
 
-cryptx.airmon("stop", iface)
-print("Monitor mode disabled")
+	crypto = find(get_shell.host_computer.File("/"), "crypto.so", "b")[0]
 
-end function
+	cryptools = include_lib(crypto.path)
+	if not cryptools then exit(vars.red + "[Error] Could not find crypto.so" + vars.endcolor)
 
-////////Main Attack Routine////////
-start = function
+	airmonResult = airmon(cryptools, "start", "wlan0")
 
-ensure_monitor_mode()
-
-networks = computer.wifi_networks(iface)
-
-if networks.len == 0 then
-	print("No WiFi networks found.")
-	return
-end if
-
-print("")
-print("Available Networks:")
-print("")
-print( "ID " + blue + "BSSID" + " " + gold + "PWR" + "   " + green + "ESSID")
-
-for index in range(0, networks.len - 1)
-	parts = networks[index].split(" ")
-	if parts.len >= 3 then
-		print(maincol + index + ".) " + blue + parts[0] + "  " + gold + parts[1] + "  " + green + parts[2])
+	if typeof(airmonResult) == "string" then
+	exit(vars.red + "[Error] Could not start monitor mode: " + airmonResult + vars.endcolor)
 	else
-		print(maincol + index + ".) " + networks[index])
+	print(vars.darkgreen + "Monitoring mode started successfully" + vars.endcolor)
 	end if
-end for
 
-print("")
+	//// FUNCTIONS
 
-selectedIndex = user_input("Select Wifi: ").to_int()
 
-if typeof(selectedIndex) == "string" then
-	print("Invalid input.")
-	return
-end if
+	alreadyCracked = function(results, network)
+	for result in results
+		networkName = result.split(" ")[1]
+		
+		if networkName == network then return 1
+	end for
 
-if selectedIndex < 0 or selectedIndex > networks.len - 1 then
-	print("Wrong index!")
-	return
-end if
+	return 0
+	end function
 
-parsed = networks[selectedIndex].split(" ")
+	formatResults = function(results, colors = 0)
+	list = []
+	
+	for line in results
+		parsed = line.split(" ")
+		
+		item = {}
+		
+		item.str = parsed[0]
+		item.net = parsed[1]
+		item.pass = parsed[2]
+		
+		list.push(item)
+	end for
 
-bssid = parsed[0]
-pwr = parsed[1][:-1].to_int()
-essid = parsed[2]
+	list.sort("net")
 
-if pwr <= -15 then
-	pwr = -14
-end if
+	results = []
+	
+	for item in list
+		newLine = item.str + " " + item.net + " " + item.pass
+		results.push(newLine)
+	end for
 
-potentialAcks = 300000 / (pwr + 15)
+	if colors then
+		temp = vars.yellow + "Strength Network Password" + vars.endcolor
+	
+		for line in results
+			temp = temp + char(10) + vars.green + line + vars.endcolor
+		end for
+	else
+		temp = "Strength Network Password"
+	
+		for line in results
+			temp = temp + char(10) + line
+		end for	
+	end if
+	
+	return format_columns(temp)
+	end function
 
-print("")
-print("Launching aireplay...")
-cryptx.aireplay(bssid, essid, potentialAcks)
+	writeResults = function(results, file)
+	text = formatResults(results)
+	
+	file.set_content(text)
+	end function
 
-print("Cracking password...")
-wifiPassword = cryptx.aircrack("/home/" + active_user + "/file.cap")
+	cleanResults = function(results)
+	if results.len > 0 then
+		print(vars.blue + "Cleaning Results..." + vars.endcolor)
+		for index in range(results.len - 1)
+			results[index] = replace_regex(results[index], "\s+", " ")
+		end for
+	end if
+	end function
 
-if not wifiPassword then
-	print(red +"Failed to crack password.")
-	return
-end if
+	removeStaleNetworks = function(results, networks)
+	print(vars.blue + "Removing stale networks..." + vars.endcolor)
 
-print(green + "Password Found: " + wifiPassword)
+	for result in results
+		essid = result.split(" ")[1]
+	
+		current = 0
+	
+		for network in networks
+			networkName = network.split(" ")[2]
+		
+			if essid == networkName then
+				current = 1
+				break
+			end if
+		end for
 
-computer.connect_wifi(iface, bssid, essid, wifiPassword)
+		if not current then
+			print(vars.red + "Removing: " + essid + vars.endcolor)
+			index = results.indexOf(result)
+			results.remove(index)
+		end if	
+	end for
+	end function
 
-print(green + "Connected to " + essid)
 
-f = home_dir+ "/file.cap"
-get_shell.host_computer.File(get_abs_path(f)).delete
+	//// END FUNCTIONS
 
+
+	outputFile = "wefe.txt"
+	comp = get_shell.host_computer
+	file = comp.File("/h4x/" + outputFile)
+	networks = comp.wifi_networks("wlan0")
+	results = []
+
+
+	if file and file.has_permission("r") then
+	content = file.get_content
+	
+	if content then
+		print(vars.blue + "Loading previous results..." + vars.endcolor)
+		results = content.split(char(10))[1:]
+	end if
+	else
+	print(vars.orange + "Could not load previous results, starting over..." + vars.endcolor)
+	comp.touch("/h4x/", outputFile)
+	file = comp.File("/h4x/" + outputFile)
+	end if
+
+	cleanResults(results)
+
+	removeStaleNetworks(results, networks)
+
+	networkList = []
+
+	for network in networks
+	parsed = network.split(" ")
+	
+	bssid = parsed[0]
+	pwr = parsed[1][:-1].to_int
+	essid = parsed[2]
+	acks = ceil(300000 / (pwr + 15))
+
+	item = {"bssid":bssid,"pwr":pwr,"essid":essid,"acks":acks}
+	networkList.push(item)
+	end for
+
+	networkList.sort("pwr")
+	networkList.reverse
+
+	for item in networkList
+	bssid = item.bssid
+	pwr = item.pwr
+	essid = item.essid
+	acks = item.acks
+	
+	if alreadyCracked(results, essid) then
+		print(vars.darkgreen + "Skipping " + essid + ", already cracked." + vars.endcolor)
+		continue
+	end if
+	
+	if pwr < 1 then
+		print(vars.orange + "Skipping " + essid + ", strength " + pwr + "%." + vars.endcolor)
+		continue
+	end if
+	
+	print(vars.yellow + "Cracking " + essid + ", " + acks + " acks." + vars.endcolor)
+	aireplayResult = cryptools.aireplay(bssid, essid, acks)
+	
+	if typeof(aireplayResult) == "string" then
+		print(vars.red + "[Error] " + aireplayResult + vars.endcolor)
+		continue
+	end if
+
+	pwd = cryptools.aircrack("/home/"+active_user+"/file.cap")
+
+	results.push(pwr + " " + essid + " " + pwd)
+	
+	writeResults(results, file)
+	
+	print(vars.green + pwr + " " + essid + " " + pwd + vars.endcolor)
+	end for
+
+	cap = comp.File("/home/"+active_user+"/file.cap")
+
+	if cap then cap.delete
+
+	print(formatResults(results, 1))
 end function
-////////Program Start////////
+
+
+////////Roamer///////
+roamer = function
+
+	green = function(str)
+    return "<color=#81eb00><b>"+str+"</b></color>"
+	end function
+
+	magenta = function(str)
+    return "<color=#b0509e><b>"+str+"</b></color>"
+	end function
+
+	red = function(str)
+    return "<color=#c30000><b>"+str+"</b></color>"
+	end function
+
+	// **Find:**
+	// Finds files (and folders) matching a pattern with optional flags.  Use * as a wildcard character.
+	// @description **Flags:**
+	// @description  b - Binary Files (excluding folders)
+	// @description  f - Folders Only
+	// @description  t - Text Files
+	// @description  r - Can Read
+	// @description  w - Can Write
+	// @description  x - Can Execute
+	// @example g.func.find(file, "*.so", "br") // Finds all readable libraries (binary files ending in ".so" with the permission "r")
+	// @example g.func.find(file, "passwd", "t") // Finds all text files named "passwd"
+	// @example g.func.find(file, "guest", "f") // Finds all folders named "guest"
+	// @param {file} file - The starting file or folder.
+	// @param {string} name - The pattern to match file names against.
+	// @param {string|null} flags - Optional flags to filter results.
+	// @return {list<file>} - The list of matching files.
+	find = function(file, name, flags = null)
+    pattern = name.replace("\.", "\.").replace("\*", ".*")
+    b = flags != null and flags.indexOf("b") != null // Binary Files
+    f = flags != null and flags.indexOf("f") != null // Folders
+    t = flags != null and flags.indexOf("t") != null // Text Files
+    r = flags != null and flags.indexOf("r") != null // Can Read
+    w = flags != null and flags.indexOf("w") != null // Can Write
+    x = flags != null and flags.indexOf("x") != null // Can Execute
+
+    results = []
+
+    if file.name.is_match(pattern) then
+        isMatch = 1
+
+        if b and (not file.is_binary or file.is_folder) then isMatch = 0
+        if f and not file.is_folder then isMatch = 0
+        if t and file.is_binary then isMatch = 0
+        if r and not file.has_permission("r") then isMatch = 0
+        if w and not file.has_permission("w") then isMatch = 0
+        if x and not file.has_permission("x") then isMatch = 0
+
+        if isMatch then results.push(file)
+    end if
+    
+    if file.is_folder then
+        files = file.get_files + file.get_folders
+
+        for temp in files
+            results = results + find(temp, name, flags)
+        end for
+    end if
+
+    return results
+	end function
+
+	//// Functions
+
+	getLines = function()
+    file = find(get_shell.host_computer.File("/h4x"), "wefe.txt", "tr")[0]
+    if not file then print(red("[Error] Could not find readable wefe.txt"))
+
+    lines = file.get_content.split("\n")[1:]
+
+    if lines.len == 0 then
+        exit(red("[Error] The wefe.txt file is empty"))
+    end if
+
+    for index in range(lines.len - 1)
+        lines[index] = replace_regex(lines[index], "\s+", " ")
+    end for
+
+    return lines
+	end function
+
+	getBssid = function(name)
+    networks = get_shell.host_computer.wifi_networks("wlan0")
+
+    for network in networks
+        parsed = network.split(" ")
+
+        bssid = parsed[0]
+        essid = parsed[2]
+
+        if essid == name then return bssid
+    end for
+
+    return null
+	end function
+
+	getRandom = function(max)
+    return floor(rnd * max)
+	end function
+
+	getNetwork = function()
+    lines = getLines
+    max = lines.len
+    index = getRandom(max)
+    parsed = lines[index].split(" ")
+
+    network = {}
+
+    network["name"] = parsed[1]
+    network["pass"] = parsed[2]
+
+    return network
+	end function
+
+	//// End Functions
+
+	if params.len == 1 and ["-h", "--help"].indexOf(params[0]) != null then
+    exit(magenta("<b>Usage: roamer [interval in seconds]</b>"))
+	else if params.len > 1 then
+    exit(magenta("<b>Usage: roamer [interval in seconds]</b>"))
+	else if params.len == 1 and typeof(params[0].to_int) != "number" then
+    exit(magenta("<b>Usage: roamer [interval in seconds]</b>"))
+	end if
+
+	if params.len == 1 then
+    interval = params[0].to_int
+	else
+    interval = 60
+	end if
+
+	count = 0
+	lastNetwork = null
+
+	print(magenta("Roamer running..."))
+
+	while true
+    network = getNetwork()
+
+    while network["name"] == lastNetwork
+        network = getNetwork()
+    end while
+
+    print(green("Connecting to " + network["name"] + "..."))
+
+    lastNetwork = network["name"]
+
+    bssid = getBssid(network["name"])
+
+    get_shell.host_computer.connect_wifi("wlan0", bssid, network["name"], network["pass"])
+
+    wait(interval)
+	end while
+end function
+////////Main Loop Menu////////
 show_banner()
 while menu
 print("")
@@ -167,8 +480,14 @@ end if
 parts = input.trim().split(" ")
 cmd = parts[0].lower()
 
-if cmd == "start" then
-	start()
+
+
+if cmd == "xwefe" then
+	xwefe()
+end if
+
+if cmd == "roamer" then
+	roamer()
 end if
 
 if cmd == "help" then
@@ -179,8 +498,7 @@ if cmd == "clear" then
 	clear_screen
 end if
 
-if cmd == "exit" or cmd == "quit" then
-	print("Exiting...")
+if cmd == "exit" or cmd == "quit" or cmd == "close" then
 	exit
 	end if
 end while
